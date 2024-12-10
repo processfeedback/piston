@@ -2,6 +2,6 @@ working = True
 
 match working:
     case True:
-        print("OK")
+        print("OK ")
     case False:
         print()
