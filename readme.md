@@ -41,6 +41,14 @@
 
 <br>
 
+# Changes made
+
+1. Updated Java version
+
+---
+
+<br>
+
 # About
 
 <h4>
