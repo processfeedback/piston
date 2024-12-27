@@ -44,6 +44,7 @@
 # Changes made
 
 1. Updated Java version
+2. Added packages for Python (scikit-learn, numpy, pandas, etc.)
 
 ---
 
