@@ -45,6 +45,7 @@
 
 1. Updated Java version
 2. Added packages for Python (scikit-learn, numpy, pandas, etc.)
+3. C++ compile only the first file
 
 ---
 

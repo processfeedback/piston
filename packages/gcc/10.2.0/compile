@@ -9,8 +9,8 @@ case "${PISTON_LANGUAGE}" in
         gcc -std=c11 *.c -lm
         ;;
     c++)
-        rename 's/$/\.cpp/' "$@" # Add .cpp extension
-        g++ -std=c++17 *.cpp
+#        rename 's/$/\.cpp/' "$@" # Add .cpp extension
+        g++ -std=c++17 "$1" -o a.out
         ;;
     d)
         rename 's/.code$/\.d/' "$@" # Add .d extension
