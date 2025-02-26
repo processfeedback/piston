@@ -45,7 +45,8 @@
 
 1. Updated Java version
 2. Added packages for Python (scikit-learn, numpy, pandas, etc.)
-3. C++ compile only the first file
+3. C++ compile only the first file and prevent renaming of cpp file in compile script
+4. C compile only the first file and prevent renaming of c file in compile script
 
 ---
 
