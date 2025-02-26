@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="c0f6c819-c53b-4f69-af75-937a020ce23b" name="Changes" comment="fix: c++ compilation to add the first file and not rename everything" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="packages/cpp-compile-fix" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Crian69&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/processfeedback/piston.git&quot;,
+    &quot;accountId&quot;: &quot;495f1b91-11c8-4548-84a2-f127d5b0b62b&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2q1hy7bI8uNMLtWnYzJD6eDEVG3" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/Projects/processfeedback/piston",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-WS-243.23654.157" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c0f6c819-c53b-4f69-af75-937a020ce23b" name="Changes" comment="" />
+      <created>1733836239999</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1733836239999</updated>
+      <workItem from="1733836241155" duration="1758000" />
+      <workItem from="1734166570863" duration="9000" />
+      <workItem from="1740494619941" duration="5219000" />
+      <workItem from="1740569989913" duration="2610000" />
+    </task>
+    <task id="LOCAL-00001" summary="fix: bump java to 21, add scikit-learn for python and rebuild gcc, fixed workflow for processfeedback">
+      <option name="closed" value="true" />
+      <created>1733836484832</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1733836484832</updated>
+    </task>
+    <task id="LOCAL-00002" summary="chore: rerun workflow after enabling actions">
+      <option name="closed" value="true" />
+      <created>1733836725805</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1733836725805</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fix: c++ compilation to add the first file and not rename everything">
+      <option name="closed" value="true" />
+      <created>1740496832463</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1740496832463</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix: bump java to 21, add scikit-learn for python and rebuild gcc, fixed workflow for processfeedback" />
+    <MESSAGE value="chore: rerun workflow after enabling actions" />
+    <MESSAGE value="fix: c++ compilation to add the first file and not rename everything" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: c++ compilation to add the first file and not rename everything" />
+  </component>
+</project>

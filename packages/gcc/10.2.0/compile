@@ -10,7 +10,7 @@ case "${PISTON_LANGUAGE}" in
         ;;
     c++)
 #        rename 's/$/\.cpp/' "$@" # Add .cpp extension
-        g++ -std=c++17 "$1" -o a.out
+        g++ -std=c++17 *.cpp
         ;;
     d)
         rename 's/.code$/\.d/' "$@" # Add .d extension
