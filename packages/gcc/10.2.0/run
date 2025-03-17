@@ -3,4 +3,4 @@
 # Put instructions to run the runtime
 
 shift # Discard main filename
-stdbuf -oL -eL ./a.out "$@"
+stdbuf -o0 -e0 ./a.out "$@"
