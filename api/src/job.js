@@ -24,14 +24,14 @@ const get_next_box_id = () => ++box_id % MAX_BOX_ID;
 class Job {
     #dirty_boxes;
     constructor({
-        runtime,
-        files,
-        args,
-        stdin,
-        timeouts,
-        cpu_times,
-        memory_limits,
-    }) {
+                    runtime,
+                    files,
+                    args,
+                    stdin,
+                    timeouts,
+                    cpu_times,
+                    memory_limits,
+                }) {
         this.uuid = uuidv4();
 
         this.logger = logplease.create(`job/${this.uuid}`);
@@ -326,7 +326,7 @@ class Job {
         if (this.state !== job_states.PRIMED) {
             throw new Error(
                 'Job must be in primed state, current state: ' +
-                    this.state.toString()
+                this.state.toString()
             );
         }
 
@@ -343,22 +343,22 @@ class Job {
         const { emit_event_bus_result, emit_event_bus_stage } =
             event_bus === null
                 ? {
-                      emit_event_bus_result: () => {},
-                      emit_event_bus_stage: () => {},
-                  }
+                    emit_event_bus_result: () => { },
+                    emit_event_bus_stage: () => { },
+                }
                 : {
-                      emit_event_bus_result: (stage, result) => {
-                          const { error, code, signal } = result;
-                          event_bus.emit('exit', stage, {
-                              error,
-                              code,
-                              signal,
-                          });
-                      },
-                      emit_event_bus_stage: stage => {
-                          event_bus.emit('stage', stage);
-                      },
-                  };
+                    emit_event_bus_result: (stage, result) => {
+                        const { error, code, signal } = result;
+                        event_bus.emit('exit', stage, {
+                            error,
+                            code,
+                            signal,
+                        });
+                    },
+                    emit_event_bus_stage: stage => {
+                        event_bus.emit('stage', stage);
+                    },
+                };
 
         if (this.runtime.compiled) {
             this.logger.debug('Compiling');
@@ -400,6 +400,61 @@ class Job {
             emit_event_bus_result('run', run);
         }
 
+        async function collectFiles(dir, baseDir, options = {}) {
+            const {
+                maxFiles = 100,
+                maxTotalSize = 10 * 1024 * 1024,
+                maxFileSize = 1 * 1024 * 1024,
+            } = options;
+
+            let results = [];
+            let totalSize = 0;
+
+            async function walk(currentDir) {
+                const entries = await fs.readdir(currentDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (results.length >= maxFiles) break;
+                    const fullPath = path.join(currentDir, entry.name);
+                    const relPath = path.relative(baseDir, fullPath);
+
+                    if (entry.isDirectory()) {
+                        await walk(fullPath);
+                    } else if (entry.isFile()) {
+                        try {
+                            const stat = await fs.stat(fullPath);
+                            if (stat.size > maxFileSize) continue;
+                            if (totalSize + stat.size > maxTotalSize) break;
+
+                            const content = await fs.readFile(fullPath);
+                            results.push({
+                                name: relPath,
+                                content: content.toString('base64'),
+                                encoding: 'base64',
+                                size: stat.size,
+                            });
+                            totalSize += stat.size;
+                        } catch (e) {
+                            // Ignore files that can't be read
+                        }
+                    }
+                }
+            }
+
+            await walk(dir);
+            return results;
+        }
+
+        let sandbox_files = [];
+        try {
+            sandbox_files = await collectFiles(box.dir, box.dir, {
+                maxFiles: 50,
+                maxTotalSize: 20 * 1024 * 1024,
+                maxFileSize: 5 * 1024 * 1024
+            });
+        } catch (e) {
+            this.logger.error('Failed to collect sandbox files:', e);
+        }
+
         this.state = job_states.EXECUTED;
 
         return {
@@ -407,6 +462,7 @@ class Job {
             run,
             language: this.runtime.language,
             version: this.runtime.version.raw,
+            sandbox_files,
         };
     }
 

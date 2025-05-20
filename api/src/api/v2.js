@@ -182,7 +182,13 @@ router.ws('/connect', async (ws, req) => {
                                 })
                             );
 
-                            await job.execute(box, event_bus);
+                            const result = await job.execute(box, event_bus);
+                            ws.send(
+                                JSON.stringify({
+                                    type: 'sandbox_files',
+                                    files: result.sandbox_files,
+                                })
+                            );
                         } catch (error) {
                             logger.error(
                                 `Error cleaning up job: ${job.uuid}:\n${error}`
