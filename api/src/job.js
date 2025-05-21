@@ -341,11 +341,12 @@ class Job {
 
         let compile;
         let compile_errored = false;
-        const { emit_event_bus_result, emit_event_bus_stage } =
+        const { emit_event_bus_result, emit_event_bus_stage, emit_event_bus_sandbox_files } =
             event_bus === null
                 ? {
                     emit_event_bus_result: () => { },
                     emit_event_bus_stage: () => { },
+                    emit_event_bus_sandbox_files: () => { },
                 }
                 : {
                     emit_event_bus_result: (stage, result) => {
@@ -358,6 +359,9 @@ class Job {
                     },
                     emit_event_bus_stage: stage => {
                         event_bus.emit('stage', stage);
+                    },
+                    emit_event_bus_sandbox_files: (files) => {
+                        event_bus.emit('sandbox_files', files);
                     },
                 };
 
@@ -386,6 +390,7 @@ class Job {
         }
 
         let run;
+        let sandbox_files = [];
         if (!compile_errored) {
             this.logger.debug('Running');
             emit_event_bus_stage('run');
@@ -398,6 +403,16 @@ class Job {
                 this.memory_limits.run,
                 event_bus
             );
+            try {
+                sandbox_files = await collectFiles(box.dir, box.dir, {
+                    maxFiles: 50,
+                    maxTotalSize: 20 * 1024 * 1024,
+                    maxFileSize: 5 * 1024 * 1024
+                });
+            } catch (e) {
+                this.logger.error('Failed to collect sandbox files:', e);
+            }
+            emit_event_bus_sandbox_files(sandbox_files);
             emit_event_bus_result('run', run);
         }
 
@@ -464,17 +479,6 @@ class Job {
 
             await walk(dir);
             return results;
-        }
-
-        let sandbox_files = [];
-        try {
-            sandbox_files = await collectFiles(box.dir, box.dir, {
-                maxFiles: 50,
-                maxTotalSize: 20 * 1024 * 1024,
-                maxFileSize: 5 * 1024 * 1024
-            });
-        } catch (e) {
-            this.logger.error('Failed to collect sandbox files:', e);
         }
 
         this.state = job_states.EXECUTED;
