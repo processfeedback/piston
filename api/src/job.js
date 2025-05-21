@@ -5,6 +5,7 @@ const path = require('path');
 const config = require('./config');
 const fs = require('fs/promises');
 const globals = require('./globals');
+const { Buffer } = require('buffer');
 
 const job_states = {
     READY: Symbol('Ready to be primed'),
@@ -422,8 +423,24 @@ class Job {
                     } else if (entry.isFile()) {
                         try {
                             const stat = await fs.stat(fullPath);
-                            if (stat.size > maxFileSize) continue;
-                            if (totalSize + stat.size > maxTotalSize) break;
+                            if (stat.size > maxFileSize) {
+                                results.push({
+                                    name: relPath,
+                                    content: Buffer.from('File size exceeds limit').toString('base64'),
+                                    encoding: 'base64',
+                                    size: stat.size,
+                                });
+                                continue;
+                            }
+                            if (totalSize + stat.size > maxTotalSize) {
+                                results.push({
+                                    name: relPath,
+                                    content: Buffer.from('File size exceeds limit').toString('base64'),
+                                    encoding: 'base64',
+                                    size: stat.size,
+                                });
+                                continue;
+                            }
 
                             const content = await fs.readFile(fullPath);
                             results.push({
@@ -434,7 +451,12 @@ class Job {
                             });
                             totalSize += stat.size;
                         } catch (e) {
-                            // Ignore files that can't be read
+                            results.push({
+                                name: relPath,
+                                content: Buffer.from('File could not be read').toString('base64'),
+                                encoding: 'base64',
+                                size: 0,
+                            });
                         }
                     }
                 }
