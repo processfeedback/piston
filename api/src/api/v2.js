@@ -161,6 +161,9 @@ router.ws('/connect', async (ws, req) => {
     event_bus.on('exit', (stage, status) =>
         ws.send(JSON.stringify({ type: 'exit', stage, ...status }))
     );
+    event_bus.on('sandbox_files', sandbox_files =>
+        ws.send(JSON.stringify({ type: 'sandbox_files', files: sandbox_files }))
+    );
 
     ws.on('message', async data => {
         try {

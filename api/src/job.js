@@ -5,6 +5,7 @@ const path = require('path');
 const config = require('./config');
 const fs = require('fs/promises');
 const globals = require('./globals');
+const { Buffer } = require('buffer');
 
 const job_states = {
     READY: Symbol('Ready to be primed'),
@@ -24,14 +25,14 @@ const get_next_box_id = () => ++box_id % MAX_BOX_ID;
 class Job {
     #dirty_boxes;
     constructor({
-        runtime,
-        files,
-        args,
-        stdin,
-        timeouts,
-        cpu_times,
-        memory_limits,
-    }) {
+                    runtime,
+                    files,
+                    args,
+                    stdin,
+                    timeouts,
+                    cpu_times,
+                    memory_limits,
+                }) {
         this.uuid = uuidv4();
 
         this.logger = logplease.create(`job/${this.uuid}`);
@@ -326,7 +327,7 @@ class Job {
         if (this.state !== job_states.PRIMED) {
             throw new Error(
                 'Job must be in primed state, current state: ' +
-                    this.state.toString()
+                this.state.toString()
             );
         }
 
@@ -340,25 +341,29 @@ class Job {
 
         let compile;
         let compile_errored = false;
-        const { emit_event_bus_result, emit_event_bus_stage } =
+        const { emit_event_bus_result, emit_event_bus_stage, emit_event_bus_sandbox_files } =
             event_bus === null
                 ? {
-                      emit_event_bus_result: () => {},
-                      emit_event_bus_stage: () => {},
-                  }
+                    emit_event_bus_result: () => { },
+                    emit_event_bus_stage: () => { },
+                    emit_event_bus_sandbox_files: () => { },
+                }
                 : {
-                      emit_event_bus_result: (stage, result) => {
-                          const { error, code, signal } = result;
-                          event_bus.emit('exit', stage, {
-                              error,
-                              code,
-                              signal,
-                          });
-                      },
-                      emit_event_bus_stage: stage => {
-                          event_bus.emit('stage', stage);
-                      },
-                  };
+                    emit_event_bus_result: (stage, result) => {
+                        const { error, code, signal } = result;
+                        event_bus.emit('exit', stage, {
+                            error,
+                            code,
+                            signal,
+                        });
+                    },
+                    emit_event_bus_stage: stage => {
+                        event_bus.emit('stage', stage);
+                    },
+                    emit_event_bus_sandbox_files: (files) => {
+                        event_bus.emit('sandbox_files', files);
+                    },
+                };
 
         if (this.runtime.compiled) {
             this.logger.debug('Compiling');
@@ -385,6 +390,7 @@ class Job {
         }
 
         let run;
+        let sandbox_files = [];
         if (!compile_errored) {
             this.logger.debug('Running');
             emit_event_bus_stage('run');
@@ -397,7 +403,82 @@ class Job {
                 this.memory_limits.run,
                 event_bus
             );
+            try {
+                sandbox_files = await collectFiles(box.dir, box.dir, {
+                    maxFiles: 50,
+                    maxTotalSize: 20 * 1024 * 1024,
+                    maxFileSize: 5 * 1024 * 1024
+                });
+            } catch (e) {
+                this.logger.error('Failed to collect sandbox files:', e);
+            }
+            emit_event_bus_sandbox_files(sandbox_files);
             emit_event_bus_result('run', run);
+        }
+
+        async function collectFiles(dir, baseDir, options = {}) {
+            const {
+                maxFiles = 100,
+                maxTotalSize = 10 * 1024 * 1024,
+                maxFileSize = 1 * 1024 * 1024,
+            } = options;
+
+            let results = [];
+            let totalSize = 0;
+
+            async function walk(currentDir) {
+                const entries = await fs.readdir(currentDir, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (results.length >= maxFiles) break;
+                    const fullPath = path.join(currentDir, entry.name);
+                    const relPath = path.relative(baseDir, fullPath);
+
+                    if (entry.isDirectory()) {
+                        await walk(fullPath);
+                    } else if (entry.isFile()) {
+                        try {
+                            const stat = await fs.stat(fullPath);
+                            if (stat.size > maxFileSize) {
+                                results.push({
+                                    name: relPath,
+                                    content: Buffer.from('File size exceeds limit').toString('base64'),
+                                    encoding: 'base64',
+                                    size: stat.size,
+                                });
+                                continue;
+                            }
+                            if (totalSize + stat.size > maxTotalSize) {
+                                results.push({
+                                    name: relPath,
+                                    content: Buffer.from('File size exceeds limit').toString('base64'),
+                                    encoding: 'base64',
+                                    size: stat.size,
+                                });
+                                continue;
+                            }
+
+                            const content = await fs.readFile(fullPath);
+                            results.push({
+                                name: relPath,
+                                content: content.toString('base64'),
+                                encoding: 'base64',
+                                size: stat.size,
+                            });
+                            totalSize += stat.size;
+                        } catch (e) {
+                            results.push({
+                                name: relPath,
+                                content: Buffer.from('File could not be read').toString('base64'),
+                                encoding: 'base64',
+                                size: 0,
+                            });
+                        }
+                    }
+                }
+            }
+
+            await walk(dir);
+            return results;
         }
 
         this.state = job_states.EXECUTED;
@@ -407,6 +488,7 @@ class Job {
             run,
             language: this.runtime.language,
             version: this.runtime.version.raw,
+            sandbox_files,
         };
     }
 

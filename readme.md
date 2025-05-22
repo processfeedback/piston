@@ -48,6 +48,7 @@
 3. C++ compile only the first file and prevent renaming of cpp file in compile script
 4. C compile only the first file and prevent renaming of c file in compile script
 5. Fix buffering in C to correctly handle interactive usage
+6. Add file collection functionality to job execution and return sandbox files
 
 ---
 
