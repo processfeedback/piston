@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const events = require('events');
+const crypto = require('crypto');
 
 const runtime = require('../runtime');
 const { Job } = require('../job');
@@ -119,6 +120,37 @@ function get_job(body) {
     });
 }
 
+// Nonce management and validation
+const usedNonces = new Map();
+const NONCE_WINDOW_SECONDS = 10;
+const NONCE_CLEANUP_INTERVAL = 30000;
+
+const ENCRYPTION_KEY = process.env.PISTON_API_NONCE_ENCRYPTION_KEY;
+const ENCRYPTION_IV = process.env.PISTON_API_NONCE_ENCRYPTION_IV;
+
+setInterval(() => {
+    logger.info(`Nonce cleanup: ${usedNonces.size} nonces`);
+    const now = Math.floor(Date.now() / 1000);
+    for (const [nonce, timestamp] of usedNonces.entries()) {
+        if (now - timestamp > NONCE_WINDOW_SECONDS) {
+            usedNonces.delete(nonce);
+            logger.info(`Nonce ${nonce} expired at ${now}`);
+        }
+    }
+}, NONCE_CLEANUP_INTERVAL);
+
+// Decrypt nonce function
+function decryptNonce(encryptedNonce) {
+    try {
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), Buffer.from(ENCRYPTION_IV, 'hex'));
+        let decrypted = decipher.update(encryptedNonce, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } catch (error) {
+        return null;
+    }
+}
+
 router.use((req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         return next();
@@ -130,10 +162,69 @@ router.use((req, res, next) => {
         });
     }
 
+    const encryptedNonce = req.headers['x-request-nonce'];
+    if (!encryptedNonce) {
+        return res.status(401).json({
+            message: 'Missing nonce header'
+        });
+    }
+    const decryptedNonce = decryptNonce(encryptedNonce);
+    if (!decryptedNonce) {
+        return res.status(401).json({
+            message: 'Invalid nonce format'
+        });
+    }
+
+    const [timestamp, randomString, taskId] = decryptedNonce.split(':');
+    const nonceTime = parseInt(timestamp, 10);
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    if (Math.abs(currentTime - nonceTime) > NONCE_WINDOW_SECONDS) {
+        return res.status(401).json({
+            message: 'Nonce expired'
+        });
+    }
+
+    if (usedNonces.has(encryptedNonce)) {
+        return res.status(401).json({
+            message: 'Nonce already used'
+        });
+    }
+    usedNonces.set(encryptedNonce, currentTime);
     next();
 });
 
 router.ws('/connect', async (ws, req) => {
+
+    // get the nouce from the query params as websocket does not support headers
+    const encryptedNonce = req.query.nonce;
+    if (!encryptedNonce) {
+        ws.close(4000, 'Missing nonce header');
+        return;
+    }
+
+    const decryptedNonce = decryptNonce(encryptedNonce);
+    if (!decryptedNonce) {
+        ws.close(4000, 'Invalid nonce format');
+        return;
+    }
+
+    const [timestamp, randomString, taskId] = decryptedNonce.split(':');
+    const nonceTime = parseInt(timestamp, 10);
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    if (Math.abs(currentTime - nonceTime) > NONCE_WINDOW_SECONDS) {
+        ws.close(4000, 'Nonce expired');
+        return;
+    }
+
+    if (usedNonces.has(encryptedNonce)) {
+        ws.close(4000, 'Nonce already used');
+        return;
+    }
+
+    usedNonces.set(encryptedNonce, currentTime);
+
     let job = null;
     let event_bus = new events.EventEmitter();
 
