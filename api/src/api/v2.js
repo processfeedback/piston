@@ -153,6 +153,7 @@ function decryptNonce(encryptedNonce) {
 
 router.use((req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        res.header('Access-Control-Allow-Headers', 'x-request-nonce, Content-Type');
         return next();
     }
 
