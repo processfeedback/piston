@@ -154,9 +154,11 @@ function decryptNonce(encryptedNonce) {
 router.use((req, res, next) => {
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
         res.header('Access-Control-Allow-Headers', 'x-request-nonce, Content-Type');
+        // no extra check for /packages, /runtimes endpoints
         return next();
     }
 
+    // checks for the /execute endpoint
     if (!req.headers['content-type']?.startsWith('application/json')) {
         return res.status(415).send({
             message: 'requests must be of type application/json',
@@ -182,7 +184,7 @@ router.use((req, res, next) => {
 
     if (Math.abs(currentTime - nonceTime) > NONCE_WINDOW_SECONDS) {
         return res.status(401).json({
-            message: 'Nonce expired'
+            message: `Nonce expired: ${currentTime - nonceTime} seconds`
         });
     }
 
@@ -215,7 +217,7 @@ router.ws('/connect', async (ws, req) => {
     const currentTime = Math.floor(Date.now() / 1000);
 
     if (Math.abs(currentTime - nonceTime) > NONCE_WINDOW_SECONDS) {
-        ws.close(4000, 'Nonce expired');
+        ws.close(4000, `Nonce expired: ${currentTime - nonceTime} seconds`);
         return;
     }
 
