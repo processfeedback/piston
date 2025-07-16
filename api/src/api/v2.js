@@ -309,7 +309,7 @@ router.ws('/connect', async (ws, req) => {
                         if (
                             Object.values(globals.SIGNALS).includes(msg.signal)
                         ) {
-                            event_bus.emit('signal', msg.signal);
+                            event_bus.emit('kill', msg.signal);
                         } else {
                             ws.close(4005, 'Invalid signal');
                         }

@@ -50,6 +50,7 @@
 5. Fix buffering in C to correctly handle interactive usage
 6. Add file collection functionality to job execution and return sandbox files
 7. Added time-based nonce validation for API requests with some measure for replay attacks
+8. Fix websocket signal handling - emit 'kill' instead of 'signal'
 
 ---
 
