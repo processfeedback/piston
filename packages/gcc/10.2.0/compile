@@ -26,4 +26,6 @@ case "${PISTON_LANGUAGE}" in
         ;;
 esac
 
-chmod +x a.out
+if [ -f a.out ]; then
+    chmod +x a.out
+fi
